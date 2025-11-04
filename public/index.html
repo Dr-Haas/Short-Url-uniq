@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>short-code-uniq by resonanc-e</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #2c3e50;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #7f8c8d;
+      margin-bottom: 30px;
+      font-size: 14px;
+      font-weight: 400;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #34495e;
+      font-size: 14px;
+    }
+
+    input[type="url"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      background: #fafafa;
+    }
+
+    input[type="url"]:focus {
+      outline: none;
+      border-color: #3498db;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+    }
+
+    button:hover:not(:disabled) {
+      background: #2980b9;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 24px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border-left: 4px solid #27ae60;
+      display: none;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result.show {
+      display: block;
+    }
+
+    .result.error {
+      border-left-color: #e74c3c;
+    }
+
+    .result-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #27ae60;
+      font-size: 16px;
+    }
+
+    .result.error .result-title {
+      color: #e74c3c;
+    }
+
+    .result-url {
+      word-break: break-all;
+      background: white;
+      padding: 14px;
+      border-radius: 8px;
+      margin: 12px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: #2c3e50;
+      border: 1px solid #e0e0e0;
+      line-height: 1.5;
+    }
+
+    .copy-btn {
+      margin-top: 12px;
+      background: #27ae60;
+      font-size: 14px;
+      padding: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .copy-btn:hover:not(:disabled) {
+      background: #229954;
+    }
+
+    .copy-btn.copied {
+      background: #27ae60;
+      animation: copySuccess 0.5s ease-out;
+    }
+
+    @keyframes copySuccess {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .copy-toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #27ae60;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease-out;
+      z-index: 1000;
+    }
+
+    .copy-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      color: #7f8c8d;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .loading.show {
+      display: block;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 25px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔗 short-code-uniq</h1>
+    <p class="subtitle">by resonanc-e</p>
+    
+    <form id="linkForm">
+      <div class="form-group">
+        <label for="targetUrl">URL cible :</label>
+        <input 
+          type="url" 
+          id="targetUrl" 
+          name="targetUrl" 
+          placeholder="https://example.com" 
+          required
+        >
+      </div>
+      
+      <button type="submit" id="submitBtn">
+        Créer le lien unique
+      </button>
+      
+      <div class="loading" id="loading">
+        Création du lien en cours...
+      </div>
+    </form>
+
+    <div class="result" id="result">
+      <div class="result-title" id="resultTitle"></div>
+      <div class="result-url" id="resultUrl"></div>
+      <button class="copy-btn" id="copyBtn">Copier le lien</button>
+    </div>
+  </div>
+
+  <div class="copy-toast" id="copyToast">✓ Lien copié !</div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

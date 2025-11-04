@@ -1,0 +1,23 @@
+{
+  "name": "short-code-uniq",
+  "version": "1.0.0",
+  "description": "Générateur de liens à usage unique (one-time redirect) hébergé sur Netlify",
+  "main": "netlify/functions/one-time.js",
+  "scripts": {
+    "dev": "netlify dev",
+    "deploy": "netlify deploy --prod"
+  },
+  "keywords": [
+    "short-url",
+    "one-time",
+    "redirect",
+    "netlify",
+    "serverless"
+  ],
+  "author": "resonanc-e",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
