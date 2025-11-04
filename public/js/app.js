@@ -13,10 +13,15 @@ export const getApiBaseUrl = () => {
 // Fonction pour afficher une erreur
 export const showError = (message, elements) => {
   const { result, resultTitle, resultUrl } = elements;
+  const qrCodeContainer = document.getElementById('qrCodeContainer');
   result.classList.add('error');
   result.classList.add('show');
   resultTitle.textContent = '⚠️ Erreur';
   resultUrl.textContent = message;
+  // Masquer le QR code en cas d'erreur
+  if (qrCodeContainer) {
+    qrCodeContainer.style.display = 'none';
+  }
 };
 
 // Fonction pour afficher le succès
@@ -26,6 +31,9 @@ export const showSuccess = (url, elements) => {
   result.classList.add('show');
   resultTitle.textContent = '✅ Lien généré avec succès !';
   resultUrl.textContent = url;
+  
+  // Générer le QR code
+  generateQRCode(url);
 };
 
 // Fonction pour afficher le toast de copie
@@ -99,6 +107,155 @@ const fallbackCopy = (text, copyBtn, toastElement) => {
   document.body.removeChild(textArea);
 };
 
+// Fonction pour générer le QR code
+const generateQRCode = (url) => {
+  const qrCodeContainer = document.getElementById('qrCodeContainer');
+  const qrcodeDiv = document.getElementById('qrcode');
+  
+  if (!qrCodeContainer || !qrcodeDiv) return;
+  
+  // Vider le contenu précédent
+  qrcodeDiv.innerHTML = '';
+  
+  // Attendre que la bibliothèque soit chargée (si elle n'est pas encore disponible)
+  const tryGenerateQR = () => {
+    if (typeof QRCode !== 'undefined') {
+      try {
+        new QRCode(qrcodeDiv, {
+          text: url,
+          width: 200,
+          height: 200,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+        qrCodeContainer.style.display = 'block';
+      } catch (error) {
+        console.error('Erreur lors de la génération du QR code:', error);
+      }
+    } else {
+      // Réessayer après un court délai si la bibliothèque n'est pas encore chargée
+      setTimeout(tryGenerateQR, 100);
+    }
+  };
+  
+  tryGenerateQR();
+};
+
+// Fonction pour afficher un QR code depuis l'historique
+export const showQRCodeFromHistory = (url) => {
+  const result = document.getElementById('result');
+  const resultTitle = document.getElementById('resultTitle');
+  const resultUrl = document.getElementById('resultUrl');
+  
+  result.classList.remove('error');
+  result.classList.add('show');
+  resultTitle.textContent = '🔗 Lien depuis l\'historique';
+  resultUrl.textContent = url;
+  
+  generateQRCode(url);
+  
+  // Scroll vers le résultat
+  result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
+// Gestion de l'historique avec localStorage
+const STORAGE_KEY = 'short-code-uniq-history';
+const MAX_HISTORY_ITEMS = 50;
+
+// Sauvegarder un lien dans l'historique
+export const saveToHistory = (url, targetUrl) => {
+  try {
+    let history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    
+    // Ajouter le nouveau lien en début de liste
+    history.unshift({
+      url,
+      targetUrl,
+      createdAt: new Date().toISOString()
+    });
+    
+    // Limiter à MAX_HISTORY_ITEMS éléments
+    if (history.length > MAX_HISTORY_ITEMS) {
+      history = history.slice(0, MAX_HISTORY_ITEMS);
+    }
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    renderHistory();
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde de l\'historique:', error);
+  }
+};
+
+// Récupérer l'historique
+export const getHistory = () => {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'historique:', error);
+    return [];
+  }
+};
+
+// Effacer l'historique
+export const clearHistory = () => {
+  if (confirm('Êtes-vous sûr de vouloir effacer tout l\'historique ?')) {
+    localStorage.removeItem(STORAGE_KEY);
+    renderHistory();
+  }
+};
+
+// Afficher l'historique
+export const renderHistory = () => {
+  const historyList = document.getElementById('historyList');
+  const history = getHistory();
+  
+  if (!historyList) return;
+  
+  if (history.length === 0) {
+    historyList.innerHTML = '<div class="history-empty">Aucun lien dans l\'historique</div>';
+    return;
+  }
+  
+  historyList.innerHTML = history.map((item, index) => {
+    const date = new Date(item.createdAt);
+    const formattedDate = date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    return `
+      <div class="history-item">
+        <div class="history-item-url">${item.url}</div>
+        <div class="history-item-date">${formattedDate}</div>
+        <div class="history-item-actions">
+          <button class="history-btn copy" data-url="${item.url}" data-action="copy">Copier</button>
+          <button class="history-btn qr" data-url="${item.url}" data-action="qr">QR Code</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // Ajouter les event listeners
+  historyList.querySelectorAll('.history-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const url = btn.getAttribute('data-url');
+      const action = btn.getAttribute('data-action');
+      
+      if (action === 'copy') {
+        const copyBtn = document.getElementById('copyBtn');
+        const copyToast = document.getElementById('copyToast');
+        copyToClipboard(url, copyBtn, copyToast);
+      } else if (action === 'qr') {
+        showQRCodeFromHistory(url);
+      }
+    });
+  });
+};
+
 // Fonction principale pour créer le lien
 export const createLink = async (targetUrl, elements) => {
   const { submitBtn, loading, result } = elements;
@@ -126,6 +283,9 @@ export const createLink = async (targetUrl, elements) => {
     // Afficher le résultat
     showSuccess(data.url, elements);
     
+    // Sauvegarder dans l'historique
+    saveToHistory(data.url, targetUrl);
+    
     return data.url;
   } catch (error) {
     showError(error.message || 'Erreur lors de la création du lien', elements);
@@ -148,6 +308,7 @@ const initApp = () => {
   const resultUrl = document.getElementById('resultUrl');
   const copyBtn = document.getElementById('copyBtn');
   const copyToast = document.getElementById('copyToast');
+  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
   const elements = {
     submitBtn,
@@ -157,6 +318,9 @@ const initApp = () => {
     resultUrl,
     copyBtn,
   };
+
+  // Afficher l'historique au chargement
+  renderHistory();
 
   // Gérer la soumission du formulaire
   form.addEventListener('submit', async (e) => {
@@ -186,6 +350,11 @@ const initApp = () => {
       copyToClipboard(urlToCopy, copyBtn, copyToast);
     }
   });
+
+  // Gérer le bouton effacer l'historique
+  if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', clearHistory);
+  }
 };
 
 // Démarrer l'application quand le DOM est prêt

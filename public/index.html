@@ -287,6 +287,139 @@
       }
     }
 
+    .qr-code-container {
+      text-align: center;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .qr-code-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #34495e;
+      margin-bottom: 12px;
+    }
+
+    .qr-code-wrapper {
+      display: inline-block;
+      padding: 12px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+
+    #qrcode {
+      display: inline-block;
+    }
+
+    .history-section {
+      margin-top: 40px;
+      padding-top: 30px;
+      border-top: 2px solid #e0e0e0;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .history-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .clear-history-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.3s;
+      width: auto;
+      box-shadow: none;
+    }
+
+    .clear-history-btn:hover {
+      background: #c0392b;
+    }
+
+    .history-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-left: 3px solid #3498db;
+      transition: all 0.2s;
+    }
+
+    .history-item:hover {
+      background: #f0f0f0;
+      transform: translateX(2px);
+    }
+
+    .history-item-url {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #2c3e50;
+      word-break: break-all;
+      margin-bottom: 6px;
+    }
+
+    .history-item-date {
+      font-size: 11px;
+      color: #7f8c8d;
+      margin-bottom: 8px;
+    }
+
+    .history-item-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .history-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: auto;
+      box-shadow: none;
+    }
+
+    .history-btn.copy {
+      background: #27ae60;
+    }
+
+    .history-btn.copy:hover {
+      background: #229954;
+    }
+
+    .history-btn.qr {
+      background: #3498db;
+    }
+
+    .history-btn.qr:hover {
+      background: #2980b9;
+    }
+
+    .history-empty {
+      text-align: center;
+      color: #7f8c8d;
+      padding: 30px;
+      font-style: italic;
+    }
+
     .footer {
       background: white;
       border-top: 1px solid #e0e0e0;
@@ -369,6 +502,22 @@
       <div class="result-title" id="resultTitle"></div>
       <div class="result-url" id="resultUrl"></div>
       <button class="copy-btn" id="copyBtn">Copier le lien</button>
+      <div class="qr-code-container" id="qrCodeContainer" style="display: none;">
+        <div class="qr-code-title">QR Code</div>
+        <div class="qr-code-wrapper">
+          <div id="qrcode"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="history-section" id="historySection">
+      <div class="history-header">
+        <h2 class="history-title">📜 Historique</h2>
+        <button class="clear-history-btn" id="clearHistoryBtn">Effacer</button>
+      </div>
+      <div class="history-list" id="historyList">
+        <!-- L'historique sera généré dynamiquement -->
+      </div>
     </div>
     </div>
   </div>
@@ -380,6 +529,8 @@
 
   <div class="copy-toast" id="copyToast">✓ Lien copié !</div>
 
+  <!-- Bibliothèque QR Code -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script type="module" src="/js/app.js"></script>
 </body>
 </html>
