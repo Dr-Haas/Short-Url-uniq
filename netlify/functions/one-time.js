@@ -48,10 +48,40 @@ exports.handler = async (event, context) => {
   const pathParts = event.path.split('/');
   const token = pathParts[pathParts.length - 1];
 
-  // POST : Créer un nouveau lien unique
+  // POST : Créer un nouveau lien unique ou récupérer les statistiques
   if (event.httpMethod === 'POST') {
     try {
-      const { target } = JSON.parse(event.body);
+      const body = JSON.parse(event.body);
+      
+      // Si c'est une demande de statistiques
+      if (body.action === 'stats' && body.token) {
+        const tokens = readTokens();
+        const tokenData = tokens[body.token];
+        
+        if (!tokenData) {
+          return {
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({ error: 'Token introuvable' }),
+          };
+        }
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            token: body.token,
+            target: tokenData.target,
+            views: tokenData.views || 0,
+            maxViews: tokenData.maxViews || 5,
+            createdAt: tokenData.createdAt,
+            usedAt: tokenData.usedAt,
+            history: tokenData.history || [],
+          }),
+        };
+      }
+      
+      const { target } = body;
 
       if (!target || typeof target !== 'string') {
         return {
@@ -84,6 +114,7 @@ exports.handler = async (event, context) => {
         views: 0,
         maxViews: 5,
         createdAt: new Date().toISOString(),
+        history: [],
       };
 
       // Écrire les tokens
@@ -155,6 +186,11 @@ exports.handler = async (event, context) => {
       tokens[token].views = tokens[token].maxViews || 5;
       tokens[token].maxViews = 5;
     }
+    
+    // Initialiser l'historique si absent
+    if (!tokens[token].history) {
+      tokens[token].history = [];
+    }
 
     // Vérifier si le token a atteint le nombre maximum de vues
     if ((tokens[token].views || 0) >= (tokens[token].maxViews || 5)) {
@@ -181,10 +217,19 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Incrémenter le compteur de vues
+    // Incrémenter le compteur de vues et enregistrer dans l'historique
     tokens[token].views = (tokens[token].views || 0) + 1;
+    const accessTime = new Date().toISOString();
+    
+    // Ajouter l'entrée dans l'historique
+    tokens[token].history.push({
+      timestamp: accessTime,
+      viewNumber: tokens[token].views,
+      ip: event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'inconnu',
+    });
+    
     if (tokens[token].views === tokens[token].maxViews) {
-      tokens[token].usedAt = new Date().toISOString();
+      tokens[token].usedAt = accessTime;
     }
     writeTokens(tokens);
 
