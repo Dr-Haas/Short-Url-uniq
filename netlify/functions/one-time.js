@@ -81,7 +81,8 @@ exports.handler = async (event, context) => {
       // Stocker le nouveau token
       tokens[newToken] = {
         target,
-        used: false,
+        views: 0,
+        maxViews: 5,
         createdAt: new Date().toISOString(),
       };
 
@@ -149,8 +150,14 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Vérifier si le token a déjà été utilisé
-    if (tokens[token].used) {
+    // Migration des anciens tokens (compatibilité)
+    if (tokens[token].used && tokens[token].views === undefined) {
+      tokens[token].views = tokens[token].maxViews || 5;
+      tokens[token].maxViews = 5;
+    }
+
+    // Vérifier si le token a atteint le nombre maximum de vues
+    if ((tokens[token].views || 0) >= (tokens[token].maxViews || 5)) {
       return {
         statusCode: 410,
         headers: { ...headers, 'Content-Type': 'text/html' },
@@ -174,9 +181,11 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Marquer le token comme utilisé
-    tokens[token].used = true;
-    tokens[token].usedAt = new Date().toISOString();
+    // Incrémenter le compteur de vues
+    tokens[token].views = (tokens[token].views || 0) + 1;
+    if (tokens[token].views === tokens[token].maxViews) {
+      tokens[token].usedAt = new Date().toISOString();
+    }
     writeTokens(tokens);
 
     // Rediriger vers l'URL cible
